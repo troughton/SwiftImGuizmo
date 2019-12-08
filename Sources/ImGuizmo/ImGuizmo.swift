@@ -50,8 +50,8 @@ public enum ImGuizmo {
         ImGuizmo_Enable(enabled)
     }
     
-    public static func setRect(_ rect: Rect) {
-        ImGuizmo_SetRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height)
+    public static func setRect(_ rect: Rect<Float>) {
+        ImGuizmo_SetRect(rect.origin.x, rect.origin.y, rect.size.x, rect.size.y)
     }
     
     public static func setOrthographic(_ isOrthographic: Bool) {
@@ -91,7 +91,7 @@ public enum ImGuizmo {
     
     /// - returns: the delta matrix.
     @discardableResult
-    public static func manipulate(view: Matrix4x4f, projection: Matrix4x4f, operation: TransformOperation, mode: CoordinateMode, object: inout Matrix4x4f, snap: Vector3f? = nil, localBounds: AxisAlignedBoundingBox? = nil, boundsSnap: Vector3f? = nil) -> Matrix4x4f {
+    public static func manipulate(view: Matrix4x4f, projection: Matrix4x4f, operation: TransformOperation, mode: CoordinateMode, object: inout Matrix4x4f, snap: Vector3f? = nil, localBounds: AxisAlignedBoundingBox<Float>? = nil, boundsSnap: Vector3f? = nil) -> Matrix4x4f {
         let mode = operation == .scale ? .local : mode
         
         var deltaMatrix = Matrix4x4f()

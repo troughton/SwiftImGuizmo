@@ -6,7 +6,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
 #include <stdio.h>
-#include <CImGui.h>
+#include <cimgui.h>
 
 #include "CImGuizmo.h"
 #include "ImGuizmo.h"
