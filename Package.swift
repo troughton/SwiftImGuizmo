@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "ImGuizmo",
+    platforms: [.macOS(.v10_14), .iOS(.v12), .tvOS(.v12)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -13,15 +14,15 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/troughton/SwiftMath", from: "5.0.0"),
-        .package(url: "https://github.com/troughton/SwiftImGui", from: "1.77.0"),
+        .package(url: "https://github.com/troughton/SubstrateRender", from: "6.0.0"),
+        .package(url: "https://github.com/troughton/SwiftImGui", from: "1.84.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "ImGuizmo",
-            dependencies: ["SwiftMath", "ImGui", "CImGuizmo"]),
+            dependencies: [.product(name: "SubstrateMath", package: "Substrate"), "ImGui", "CImGuizmo"]),
         .target(
             name: "CImGuizmo", dependencies: ["CImGui"]),
     ],

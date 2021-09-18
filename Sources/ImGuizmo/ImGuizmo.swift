@@ -1,23 +1,39 @@
-import SwiftMath
+import SubstrateMath
 import ImGui
 import CImGuizmo
-
-extension ImGui {
-    public static func beginImGuizmoFrame() {
-        ImGuizmo_BeginFrame()
-    }
-}
-
-public enum TransformOperation : ImGuizmoOperation.RawValue {
-    case translate = 0
-    case rotate = 1
-    case scale = 2
-    case select
-}
 
 public enum CoordinateMode : ImGuizmoMode.RawValue {
     case local
     case world
+}
+
+public struct TransformOperation : OptionSet {
+    public let rawValue: ImGuizmoOperation.RawValue
+    
+    public init(rawValue: ImGuizmoOperation.RawValue) {
+        self.rawValue = rawValue
+    }
+    
+    public static var translateX: TransformOperation { TransformOperation(rawValue: 1 << 0) }
+    public static var translateY: TransformOperation { TransformOperation(rawValue: 1 << 1) }
+    public static var translateZ: TransformOperation { TransformOperation(rawValue: 1 << 2) }
+    public static var rotateX: TransformOperation { TransformOperation(rawValue: 1 << 3) }
+    public static var rotateY: TransformOperation { TransformOperation(rawValue: 1 << 4) }
+    public static var rotateZ: TransformOperation { TransformOperation(rawValue: 1 << 5) }
+    public static var rotateScreen: TransformOperation { TransformOperation(rawValue: 1 << 6) }
+    public static var scaleX: TransformOperation { TransformOperation(rawValue: 1 << 7) }
+    public static var scaleY: TransformOperation { TransformOperation(rawValue: 1 << 8) }
+    public static var scaleZ: TransformOperation { TransformOperation(rawValue: 1 << 9) }
+    public static var bounds: TransformOperation { TransformOperation(rawValue: 1 << 10) }
+    public static var scaleXUniversal: TransformOperation { TransformOperation(rawValue: 1 << 11) }
+    public static var scaleYUniversal: TransformOperation { TransformOperation(rawValue: 1 << 12) }
+    public static var scaleZUniversal: TransformOperation { TransformOperation(rawValue: 1 << 13) }
+    
+    public static var translate: TransformOperation { return [.translateX, .translateY, .translateZ] }
+    public static var rotate: TransformOperation { return [.rotateX, .rotateY, .rotateZ, .rotateScreen] }
+    public static var scale: TransformOperation { return [.scaleX, .scaleY, .scaleZ] }
+    public static var scaleUniversal: TransformOperation { return [.scaleXUniversal, .scaleYUniversal, .scaleZUniversal] }
+    public static var universal: TransformOperation { return [.translate, .rotate, .scaleUniversal] }
 }
 
 fileprivate func withUnsafeOptionalBytes<T>(of value: T?, perform: (UnsafeRawBufferPointer) -> Void) {
@@ -32,8 +48,16 @@ fileprivate func withUnsafeOptionalBytes<T>(of value: T?, perform: (UnsafeRawBuf
 
 public enum ImGuizmo {
     
-    public static func setDrawList() {
-        ImGuizmo_SetDrawList()
+    public static func setDrawList(_ drawList: UnsafeMutablePointer<ImDrawList>? = nil) {
+        ImGuizmo_SetDrawList(drawList)
+    }
+    
+    public static func beginFrame() {
+        ImGuizmo_BeginFrame()
+    }
+    
+    public static func setImGuiContext(_ context: UnsafeMutablePointer<ImGuiContext>) {
+        ImGuizmo_SetImGuiContext(context)
     }
     
     /// return true if mouse cursor is over any gizmo control (axis, plan or screen component)
@@ -59,14 +83,16 @@ public enum ImGuizmo {
     }
     
     /// Render a cube with face color corresponding to face normal. Useful for debug/tests
-    public static func drawCube(view: Matrix4x4f, projection: Matrix4x4f, object: Matrix4x4f) {
+    public static func drawCubes(view: Matrix4x4f, projection: Matrix4x4f, cubeTransforms: [Matrix4x4f]) {
+        let objectCount = cubeTransforms.count
         withUnsafeBytes(of: view) { view in
             withUnsafeBytes(of: projection) { projection in
-                withUnsafeBytes(of: object) { object in
-                    ImGuizmo_DrawCube(
+                cubeTransforms.withUnsafeBytes { objects in
+                    ImGuizmo_DrawCubes(
                         view.baseAddress!.assumingMemoryBound(to: Float.self),
                         projection.baseAddress!.assumingMemoryBound(to: Float.self),
-                        object.baseAddress!.assumingMemoryBound(to: Float.self)
+                        objects.baseAddress!.assumingMemoryBound(to: Float.self),
+                        objectCount
                     )
                 }
             }
@@ -123,5 +149,36 @@ public enum ImGuizmo {
         }
         
         return deltaMatrix
+    }
+    
+    public static func manipulateView(view: inout Matrix4x4f, pivotDistance: Float, position: SIMD2<Float>, size: SIMD2<Float>, backgroundColor: UInt32) {
+        withUnsafeMutableBytes(of: &view) { (view: UnsafeMutableRawBufferPointer) -> Void in
+            ImGuizmo_ViewManipulate(
+                view.baseAddress!.assumingMemoryBound(to: Float.self),
+                pivotDistance,
+                ImVec2(position),
+                ImVec2(size),
+                backgroundColor
+            )
+        }
+    }
+    
+    public static func setID(_ id: Int32) {
+        ImGuizmo_SetID(id)
+    }
+    
+    public static func isOver(for operation: TransformOperation) -> Bool{
+        return ImGuizmo_IsOverOperation(ImGuizmoOperation(operation.rawValue))
+    }
+    
+    public static func setGizmoSizeClipSpace(to value: Float){
+        return ImGuizmo_SetGizmoSizeClipSpace(value)
+    }
+    
+    /// Allow axis to flip
+    /// When true (default), the guizmo axis flip for better visibility
+    /// When false, they always stay along the positive world/local axis
+    public static func setAxisFlipsAllowed(_ axisFlipsAllowed: Bool) {
+        ImGuizmo_AllowAxisFlip(axisFlipsAllowed)
     }
 }

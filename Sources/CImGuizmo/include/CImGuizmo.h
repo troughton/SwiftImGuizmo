@@ -1,37 +1,20 @@
 #ifndef CImGuizmo_h
 #define CImGuizmo_h
 
-#if defined _WIN32 || defined __CYGWIN__
-    #ifdef CIMGUI_NO_EXPORT
-        #define API
-    #else
-        #define API __declspec(dllexport)
-    #endif
-    #ifndef __GNUC__
-    #define snprintf sprintf_s
-    #endif
-#else
-    #define API
-#endif
-
-#if defined __cplusplus
-    #define EXTERN extern "C"
-#else
-    #include <stdarg.h>
-    #include <stdbool.h>
-    #define EXTERN extern
-#endif
-
-#define CIMGUI_API EXTERN API
-#define CONST const
-
+#include "CImGui.h"
 
 _Pragma("clang assume_nonnull begin")
 
-CIMGUI_API void ImGuizmo_SetDrawList();
+CIMGUI_API void ImGuizmo_SetDrawList(ImDrawList *_Nullable drawList);
 
 // call BeginFrame right after ImGui_XXXX_NewFrame();
 CIMGUI_API void ImGuizmo_BeginFrame();
+
+// this is necessary because when imguizmo is compiled into a dll, and imgui into another
+// globals are not shared between them.
+// More details at https://stackoverflow.com/questions/19373061/what-happens-to-global-and-static-variables-in-a-shared-library-when-it-is-dynam
+// expose method to set imgui context
+CIMGUI_API void ImGuizmo_SetImGuiContext(ImGuiContext *_Nonnull ctx);
 
 // return true if mouse cursor is over any gizmo control (axis, plan or screen component)
 CIMGUI_API bool ImGuizmo_IsOver();
@@ -63,7 +46,7 @@ CIMGUI_API void ImGuizmo_SetRect(float x, float y, float width, float height);
 CIMGUI_API void ImGuizmo_SetOrthographic(bool isOrthographic);
 
 // Render a cube with face color corresponding to face normal. Usefull for debug/tests
-CIMGUI_API void ImGuizmo_DrawCube(const float *view, const float *projection, const float *matrix);
+CIMGUI_API void ImGuizmo_DrawCubes(const float *view, const float *projection, const float* matrices, size_t matrixCount);
 
 CIMGUI_API void ImGuizmo_DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
@@ -72,9 +55,26 @@ CIMGUI_API void ImGuizmo_DrawGrid(const float *view, const float *projection, co
 // matrix parameter is the source matrix (where will be gizmo be drawn) and might be transformed by the function. Return deltaMatrix is optional
 // translation is applied in world space
 typedef enum ImGuizmoOperation {
-    ImGuizmoOperationTranslate,
-    ImGuizmoOperationRotate,
-    ImGuizmoOperationScale
+    ImGuizmoOperationTranslateX      = (1u << 0),
+    ImGuizmoOperationTranslateY      = (1u << 1),
+    ImGuizmoOperationTranslateZ      = (1u << 2),
+    ImGuizmoOperationRotateX         = (1u << 3),
+    ImGuizmoOperationRotateY         = (1u << 4),
+    ImGuizmoOperationRotateZ         = (1u << 5),
+    ImGuizmoOperationRotateScreen    = (1u << 6),
+    ImGuizmoOperationScaleX          = (1u << 7),
+    ImGuizmoOperationScaleY          = (1u << 8),
+    ImGuizmoOperationScaleZ          = (1u << 9),
+    ImGuizmoOperationBounds           = (1u << 10),
+    ImGuizmoOperationScaleXU         = (1u << 11),
+    ImGuizmoOperationScaleYU         = (1u << 12),
+    ImGuizmoOperationScaleZU         = (1u << 13),
+
+    ImGuizmoOperationTranslate = ImGuizmoOperationTranslateX | ImGuizmoOperationTranslateY | ImGuizmoOperationTranslateZ,
+    ImGuizmoOperationRotate = ImGuizmoOperationRotateX | ImGuizmoOperationRotateY | ImGuizmoOperationRotateZ | ImGuizmoOperationRotateScreen,
+    ImGuizmoOperationScale = ImGuizmoOperationScaleX | ImGuizmoOperationScaleY | ImGuizmoOperationScaleZ,
+    ImGuizmoOperationScaleU = ImGuizmoOperationScaleXU | ImGuizmoOperationScaleYU | ImGuizmoOperationScaleZU, // universal
+    ImGuizmoOperationUniversal = ImGuizmoOperationTranslate | ImGuizmoOperationRotate | ImGuizmoOperationScaleU
 } ImGuizmoOperation;
 
 typedef enum ImGuizmoMode
@@ -84,6 +84,20 @@ typedef enum ImGuizmoMode
 } ImGuizmoMode;
 
 CIMGUI_API void ImGuizmo_Manipulate(const float *view, const float *projection, ImGuizmoOperation operation, ImGuizmoMode mode, float *matrix, float *_Nullable deltaMatrix, const float *_Nullable snap, const float *_Nullable localBounds, const float *_Nullable boundsSnap);
+
+
+CIMGUI_API void ImGuizmo_ViewManipulate(float* view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+
+CIMGUI_API void ImGuizmo_SetID(int id);
+
+// return true if the cursor is over the operation's gizmo
+CIMGUI_API bool ImGuizmo_IsOverOperation(ImGuizmoOperation op);
+CIMGUI_API void ImGuizmo_SetGizmoSizeClipSpace(float value);
+
+// Allow axis to flip
+// When true (default), the guizmo axis flip for better visibility
+// When false, they always stay along the positive world/local axis
+CIMGUI_API void ImGuizmo_AllowAxisFlip(bool value);
 
 _Pragma("clang assume_nonnull end")
 
