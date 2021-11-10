@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "ImGuizmo",
-    platforms: [.macOS(.v10_14), .iOS(.v12), .tvOS(.v12)],
+    platforms: [.macOS(.v10_14), .iOS(.v13), .tvOS(.v13)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/troughton/SubstrateRender", from: "6.0.0"),
+        .package(url: "https://github.com/troughton/SubstrateRender", from: "7.0.0"),
         .package(url: "https://github.com/troughton/SwiftImGui", from: "1.84.1"),
     ],
     targets: [
