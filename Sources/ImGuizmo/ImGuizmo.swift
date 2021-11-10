@@ -7,6 +7,7 @@ public enum CoordinateMode : ImGuizmoMode.RawValue {
     case world
 }
 
+
 public struct TransformOperation : OptionSet {
     public let rawValue: ImGuizmoOperation.RawValue
     
@@ -156,8 +157,8 @@ public enum ImGuizmo {
             ImGuizmo_ViewManipulate(
                 view.baseAddress!.assumingMemoryBound(to: Float.self),
                 pivotDistance,
-                ImVec2(position),
-                ImVec2(size),
+                ImVec2(x: position.x, y: position.y),
+                ImVec2(x: size.x, y: size.y),
                 backgroundColor
             )
         }
