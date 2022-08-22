@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(name: "Substrate", url: "https://github.com/troughton/SubstrateRender", from: "7.0.0"),
+        .package(name: "Substrate", url: "https://github.com/troughton/SubstrateRender", from: "8.0.0"),
         .package(url: "https://github.com/troughton/SwiftImGui", from: "1.84.1"),
     ],
     targets: [
